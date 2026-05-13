@@ -29,34 +29,21 @@ class File {
   File(const File&) = delete;
   File(File&&) = delete;
 
-  [[nodiscard]] std::string_view name() const {
-    return name_;
-  }
+  [[nodiscard]] std::string_view name() const { return name_; }
 
-  [[nodiscard]] const char* c_name() const {
-    return name_.c_str();
-  }
+  [[nodiscard]] const char* c_name() const { return name_.c_str(); }
 
-  [[nodiscard]] std::string_view path() const {
-    return path_;
-  }
+  [[nodiscard]] std::string_view path() const { return path_; }
 
-  [[nodiscard]] const char* c_path() const {
-    return path_.c_str();
-  }
+  [[nodiscard]] const char* c_path() const { return path_.c_str(); }
 
-  [[nodiscard]] constexpr uint64_t size() const {
-    return size_;
-  }
+  [[nodiscard]] constexpr uint64_t size() const { return size_; }
 
-  [[nodiscard]] constexpr uint8_t* memory_map() const {
-    return memory_map_;
-  }
+  [[nodiscard]] constexpr uint8_t* memory_map() const { return memory_map_; }
 
   [[nodiscard]] constexpr int32_t file_descriptor() const {
     return file_descriptor_;
   }
-
 
   ~File() {
     UnmapMemory();
