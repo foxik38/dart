@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(googletest)
 
 set(dart_header_files
         include/file.hpp
+        include/paging.hpp
 )
 
 set(dart_source_files
@@ -29,6 +30,10 @@ target_link_libraries(dart_executable PRIVATE dart_target)
 
 add_executable(dart_unit_tests
         tests/file_test.cpp
+        tests/paging_test.cpp
 )
 
 target_link_libraries(dart_unit_tests PRIVATE dart_target gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(dart_unit_tests)
