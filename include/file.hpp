@@ -1,63 +1,65 @@
 #pragma once
-#include <cstdint>
 #include <expected>
-#include <memory>
+#include <limits>
 #include <string>
-#include <utility>
 #include <string_view>
+#include <utility>
 
-class File {
- public:
-  explicit File(std::string name, std::string path)
-      : name_{std::move(name)}, path_{std::move(path)} {
-    HandleResult(Open());
-  }
+#include "paging.hpp"
 
-  explicit File(std::string name, std::string path, const uint64_t size)
-      : name_{std::move(name)}, path_{std::move(path)}, size_{size} {
-    HandleResult(Open());
-  }
+namespace dart {
+  using error_t = int32_t;
 
-  [[nodiscard]] std::expected<void, int32_t> Open() noexcept;
-  [[nodiscard]] std::expected<void, int32_t> MapMemory() noexcept;
+  template <uint64_t N>
+  concept IsValidSize =
+      std::cmp_greater_equal(N, 4096) &&
+      std::cmp_less(
+          N,
+          static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) * 4 - 4);
 
-  void Close() noexcept;
-  void UnmapMemory() noexcept;
+  template <uint64_t N>
+    requires IsValidSize<N>
+  class File {
+   public:
+    explicit File(std::string path) : path_{std::move(path)} {
+      HandleResult(Open());
+      HandleResult(MapMemory());
+    }
 
-  File& operator=(const File&) = delete;
-  File& operator=(File&&) = delete;
-  File(const File&) = delete;
-  File(File&&) = delete;
+    [[nodiscard]] std::string_view path() const noexcept { return path_; }
+    [[nodiscard]] const char* c_path() const noexcept { return path_.c_str(); }
+    [[nodiscard]] constexpr uint64_t size() const noexcept { return size_; }
+    [[nodiscard]] constexpr paging::Mode page_mode() const noexcept {
+      return page_mode_;
+    }
+    [[nodiscard]] constexpr uint8_t* memory_map() const noexcept {
+      return memory_map_;
+    }
+    [[nodiscard]] constexpr int32_t file_descriptor() const noexcept {
+      return file_descriptor_;
+    }
 
-  [[nodiscard]] std::string_view name() const { return name_; }
+    File& operator=(const File&) = delete;
+    File& operator=(File&&) = delete;
+    File(const File&) = delete;
+    File(File&&) = delete;
 
-  [[nodiscard]] const char* c_name() const { return name_.c_str(); }
+    ~File() { CloseAndUnmapMemory(); }
 
-  [[nodiscard]] std::string_view path() const { return path_; }
+   private:
+    std::string path_{"/dart.db"};
+    uint64_t size_{paging::Align(N).first};
+    paging::Mode page_mode_{paging::Align(N).second};
+    uint8_t* memory_map_{nullptr};
+    int32_t file_descriptor_{-1};
 
-  [[nodiscard]] const char* c_path() const { return path_.c_str(); }
+    [[nodiscard]] std::expected<void, error_t> Open() noexcept;
+    [[nodiscard]] std::expected<void, error_t> MapMemory() noexcept;
+    void CloseAndUnmapMemory() noexcept;
 
-  [[nodiscard]] constexpr uint64_t size() const { return size_; }
-
-  [[nodiscard]] constexpr uint8_t* memory_map() const { return memory_map_; }
-
-  [[nodiscard]] constexpr int32_t file_descriptor() const {
-    return file_descriptor_;
-  }
-
-  ~File() {
-    UnmapMemory();
-    Close();
-  }
-
- private:
-  constexpr static uint64_t kPageSize = {4 * 1024};
-
-  std::string name_{"default.dart"};
-  std::string path_{"/database/"};
-  uint64_t size_ {kPageSize};
-  uint8_t* memory_map_{nullptr};
-  int32_t file_descriptor_{-1};
-
-  void HandleResult(std::expected<void, int32_t> result) const;
-};
+    static void HandleResult(std::expected<void, error_t> result) {
+      if (!result.has_value())
+        throw std::bad_expected_access<error_t>(result.error());
+    }
+  };
+}
