@@ -17,25 +17,21 @@ namespace dart {
           N,
           static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) * 4 - 4);
 
-  template <uint64_t N>
-    requires IsValidSize<N>
   class File {
    public:
-    explicit File(std::string path) : path_{std::move(path)} {
-      HandleResult(Open());
-      HandleResult(MapMemory());
+    template <uint64_t N>
+      requires IsValidSize<N>
+    static File Create(std::string path) {
+      const auto align = paging::Align(N);
+      return File(std::move(path), align.first, align.second);
     }
 
     [[nodiscard]] std::string_view path() const noexcept { return path_; }
     [[nodiscard]] const char* c_path() const noexcept { return path_.c_str(); }
-    [[nodiscard]] constexpr uint64_t size() const noexcept { return size_; }
-    [[nodiscard]] constexpr paging::Mode page_mode() const noexcept {
-      return page_mode_;
-    }
-    [[nodiscard]] constexpr uint8_t* memory_map() const noexcept {
-      return memory_map_;
-    }
-    [[nodiscard]] constexpr int32_t file_descriptor() const noexcept {
+    [[nodiscard]] uint64_t size() const noexcept { return size_; }
+    [[nodiscard]] paging::Mode page_mode() const noexcept { return page_mode_; }
+    [[nodiscard]] uint8_t* memory_map() const noexcept { return memory_map_; }
+    [[nodiscard]] int32_t file_descriptor() const noexcept {
       return file_descriptor_;
     }
 
@@ -48,10 +44,16 @@ namespace dart {
 
    private:
     std::string path_{"/dart.db"};
-    uint64_t size_{paging::Align(N).first};
-    paging::Mode page_mode_{paging::Align(N).second};
+    uint64_t size_{4096};
+    paging::Mode page_mode_{paging::Mode::kStandard};
     uint8_t* memory_map_{nullptr};
     int32_t file_descriptor_{-1};
+
+    explicit File(std::string&& path, uint64_t size, paging::Mode page_mode)
+        : path_{std::move(path)}, size_{size}, page_mode_{page_mode} {
+      HandleResult(Open());
+      HandleResult(MapMemory());
+    }
 
     [[nodiscard]] std::expected<void, error_t> Open() noexcept;
     [[nodiscard]] std::expected<void, error_t> MapMemory() noexcept;
@@ -62,4 +64,4 @@ namespace dart {
         throw std::bad_expected_access<error_t>(result.error());
     }
   };
-}
+}  // namespace dart
