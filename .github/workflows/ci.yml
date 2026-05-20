@@ -1,0 +1,39 @@
+name: CI | Ubuntu 24.04 LTS
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: latest
+          ninjaVersion: latest
+
+      - name: Install GCC toolchain
+        uses: egor-tensin/setup-gcc@v2
+        with:
+          version: 14
+
+      - name: Configure CMake
+        run: |
+          cmake -G Ninja -B build \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile
+        run: cmake --build build --config Release
+
+      - name: Execute unit tests
+        run: |
+          cd build
+          ctest --output-on-failure
