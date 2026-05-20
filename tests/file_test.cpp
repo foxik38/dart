@@ -8,4 +8,7 @@ TEST(File, CreatesInstance) {
 
   EXPECT_EQ(users.size(), 4096 * 2);
   EXPECT_EQ(orders.size(), 4096 * 4);
+
+  unlink("users.db");
+  unlink("orders.db");
 }
