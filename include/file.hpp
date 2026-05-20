@@ -22,8 +22,7 @@ namespace dart {
     template <uint64_t N>
       requires IsValidSize<N>
     static File Create(std::string path) {
-      const auto align = paging::Align(N);
-      return File(std::move(path), align.first, align.second);
+      return File(std::move(path), N);
     }
 
     [[nodiscard]] std::string_view path() const noexcept { return path_; }
@@ -43,14 +42,14 @@ namespace dart {
     ~File() { CloseAndUnmapMemory(); }
 
    private:
-    std::string path_{"/dart.db"};
+    std::string path_{"dart.db"};
     uint64_t size_{4096};
     paging::Mode page_mode_{paging::Mode::kStandard};
     uint8_t* memory_map_{nullptr};
     int32_t file_descriptor_{-1};
 
-    explicit File(std::string&& path, uint64_t size, paging::Mode page_mode)
-        : path_{std::move(path)}, size_{size}, page_mode_{page_mode} {
+    explicit File(std::string&& path, uint64_t size)
+        : path_{std::move(path)}, size_{size} {
       HandleResult(Open());
       HandleResult(MapMemory());
     }
@@ -64,4 +63,4 @@ namespace dart {
         throw std::bad_expected_access<error_t>(result.error());
     }
   };
-}  // namespace dart
+}
