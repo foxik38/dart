@@ -1,4 +1,6 @@
 # dart
+![CI Status](https://github.com/foxik38/dart/actions/workflows/ci.yml/badge.svg)
+![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg?logo=c%2B%2B)
 ![License](https://img.shields.io/github/license/foxik38/dart)
 ![GitHub last commit](https://img.shields.io/github/last-commit/foxik38/dart)
 ___
@@ -15,8 +17,11 @@ and cache-friendly design making it a performance beast.
 - **Open source** ― Licensed under MIT License, Dart is available for everyone to use
 as well as contribute to!
 
-
 ### Features
-- **Current** ― Basic project structure, modern build configurations, Google C++ style, File class skeleton and compile-time size constraints.
-- **In progress** ― Implement kernel system calls (such as `mmap()`, `open()` etc.), Continuous Integration (CI), Unit tests.
-- **Planned** ― Database query language, CLI mode, remote connection, Query builder.
+- Hardware aligned paging and cache compliance
+- Zero-copy layout with minimal heap footprint
+- Compile-time safety type and value safety
+- Kernel system calls usage (`mmap(2)`, `munmap(2)`, `open(2)`, `close(2)` and more)
+- Continuous Integration using GitHub Actions
+
+**Planned** ― Table encryption, database query language, CLI mode, remote connection, query builder.
