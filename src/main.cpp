@@ -4,7 +4,13 @@
 
 int main() {
   try {
-    const dart::File db = dart::File::Create<100'000>("dart.db");
+    const dart::FileConfig config {
+      .path = "dart.db",
+      .read_only = false,
+      .override = true
+    };
+
+    const dart::File db = dart::File::Create<100'000>(config);
 
     std::cout << "path: " << db.path() << '\n';
     std::cout << "size: " << db.size() << '\n';
