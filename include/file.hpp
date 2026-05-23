@@ -5,31 +5,47 @@
 #include <string_view>
 #include <utility>
 
-#include "paging.hpp"
+#include "file_utils.hpp"
 
 namespace dart {
   using error_t = int32_t;
 
-  template <uint64_t N>
-  concept IsValidSize =
-      std::cmp_greater_equal(N, 4096) &&
-      std::cmp_less(
-          N,
-          static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) * 4 - 4);
+  struct FileConfig {
+    std::string path;
+    std::string directory{"/"};
+    bool read_only{false};
+    bool override{false};
+  };
 
-  class File {
+  template <uint64_t T>
+  concept IsValidSize =
+      T >= 4096 &&
+      T < static_cast<uint64_t>(std::numeric_limits<uint32_t>::max()) * 4 - 4;
+
+  class alignas(64) File {
    public:
-    template <uint64_t N>
-      requires IsValidSize<N>
-    static File Create(std::string path) {
-      return File(std::move(path), N);
+    template <uint64_t T>
+      requires IsValidSize<T>
+    static File Create(FileConfig config) {
+      return File(std::move(config), T);
     }
 
-    [[nodiscard]] std::string_view path() const noexcept { return path_; }
-    [[nodiscard]] const char* c_path() const noexcept { return path_.c_str(); }
     [[nodiscard]] uint64_t size() const noexcept { return size_; }
-    [[nodiscard]] paging::Mode page_mode() const noexcept { return page_mode_; }
+
+    [[nodiscard]] std::string_view path() const noexcept {
+      return config_.path;
+    }
+
+    [[nodiscard]] const char* c_path() const noexcept {
+      return config_.path.c_str();
+    }
+
+    [[nodiscard]] file_utils::Page page_mode() const noexcept {
+      return page_mode_;
+    }
+
     [[nodiscard]] uint8_t* memory_map() const noexcept { return memory_map_; }
+
     [[nodiscard]] int32_t file_descriptor() const noexcept {
       return file_descriptor_;
     }
@@ -42,14 +58,14 @@ namespace dart {
     ~File() { CloseAndUnmapMemory(); }
 
    private:
-    std::string path_{"dart.db"};
-    uint64_t size_{4096};
-    paging::Mode page_mode_{paging::Mode::kStandard};
+    FileConfig config_;
+    uint64_t size_;
+    file_utils::Page page_mode_{file_utils::Page::kStandard};
     uint8_t* memory_map_{nullptr};
     int32_t file_descriptor_{-1};
 
-    explicit File(std::string&& path, uint64_t size)
-        : path_{std::move(path)}, size_{size} {
+    explicit File(FileConfig&& config, uint64_t size)
+        : config_{std::move(config)}, size_{size} {
       HandleResult(Open());
       HandleResult(MapMemory());
     }
