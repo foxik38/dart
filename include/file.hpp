@@ -13,6 +13,7 @@ namespace dart {
   struct FileConfig {
     std::string path;
     std::string directory{"/"};
+    uint32_t sync_on{0};
     bool read_only{false};
     bool override{false};
   };
@@ -28,6 +29,11 @@ namespace dart {
       requires IsValidSize<T>
     static File Create(FileConfig config) {
       return File(std::move(config), T);
+    }
+
+    void RegisterWrite() {
+      HandleResult(Sync());
+      ++write_counter_;
     }
 
     [[nodiscard]] uint64_t size() const noexcept { return size_; }
@@ -63,15 +69,19 @@ namespace dart {
     file_utils::Page page_mode_{file_utils::Page::kStandard};
     uint8_t* memory_map_{nullptr};
     int32_t file_descriptor_{-1};
+    uint32_t write_counter_{0};
 
     explicit File(FileConfig&& config, uint64_t size)
         : config_{std::move(config)}, size_{size} {
-      HandleResult(Open());
-      HandleResult(MapMemory());
+      HandleResult(VerifyConfig()
+        .and_then([&] { return Open(); })
+        .and_then([&] { return MapMemory(); }));
     }
 
+    [[nodiscard]] std::expected<void, error_t> VerifyConfig() const noexcept;
     [[nodiscard]] std::expected<void, error_t> Open() noexcept;
     [[nodiscard]] std::expected<void, error_t> MapMemory() noexcept;
+    [[nodiscard]] std::expected<void, error_t> Sync() noexcept;
     void CloseAndUnmapMemory() noexcept;
 
     static void HandleResult(std::expected<void, error_t> result) {
