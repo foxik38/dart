@@ -1,27 +1,19 @@
-#include <cstring>
 #include <iostream>
 
+#include "database.hpp"
 #include "file.hpp"
+#include "table.hpp"
 
 int main() {
-  try {
-    const uint64_t size {dart::file_utils::Megabytes(512)};
-    const uint64_t address_pool {size / 8};
+  constexpr dart::Config cfg {"users.db", 4096};
+  auto copy_cfg = cfg;
 
-    const dart::FileConfig config {
-      .path = "benchmark.db",
-      .sync_on = 0
-    };
+  std::array tables {
+    dart::Table::Construct<cfg>(),
+    dart::Table::Construct<{"orders.db", 8192}>()
+  };
 
-    dart::File db = dart::File::Create<size>(config);
-
-    uint8_t* address {db.memory_map()};
-
-    for (uint64_t i{0}; i < address_pool; ++i) {
-      const uint64_t offset {i * 8};
-      address[offset] = i;
-    }
-  } catch (const std::bad_expected_access<dart::error_t>& e) {
-    std::cerr << std::strerror(e.error());
+  for (auto& table: tables) {
+    std::cout << table.size() << '\n';
   }
 }
