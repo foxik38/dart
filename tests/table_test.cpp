@@ -1,17 +1,19 @@
 #include <gtest/gtest.h>
 
-#include "file.hpp"
+#include "table.hpp"
 
-TEST(File, CreatesInstance) {
-  const std::array tables{
-    dart::File::Create<8000>({"users.db"}),
-    dart::File::Create<16000>({"orders.db"})
+TEST(Table, CheckTableSize) {
+  const std::array tables {
+    dart::Table::Construct<{"users.db", 4096}>(),
+    dart::Table::Construct<{"orders.db", 4096}>(),
+    dart::Table::Construct<{"customers.db", 4096}>(),
+    dart::Table::Construct<{"salaries.db", 4096}>(),
+    dart::Table::Construct<{"logs.db", 4096}>()
   };
 
-  for (uint32_t i{0}; i < tables.size(); ++i) {
-    EXPECT_EQ(tables[i].page_mode(), dart::file_utils::Page::kStandard);
-    EXPECT_GE(tables[i].file_descriptor(), 0);
-
-    unlink(tables[i].c_path());
+  for (auto& table: tables) {
+    EXPECT_EQ(table.size(), 4096);
   }
+
+  EXPECT_EQ(sizeof(tables), 5 * 64);
 }
