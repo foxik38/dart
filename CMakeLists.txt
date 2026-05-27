@@ -18,6 +18,9 @@ FetchContent_MakeAvailable(googletest)
 set(dart_header_files
         include/file.hpp
         include/file_utils.hpp
+        include/database.hpp
+        include/table.hpp
+        include/config.hpp
 )
 
 set(dart_source_files
@@ -31,7 +34,7 @@ add_executable(dart_executable src/main.cpp)
 target_link_libraries(dart_executable PRIVATE dart_target)
 
 add_executable(dart_unit_tests
-        tests/file_test.cpp
+        tests/table_test.cpp
         tests/file_utils_test.cpp
 )
 
