@@ -3,22 +3,20 @@
 #include "config.hpp"
 
 namespace dart {
-  template <uint64_t S>
-  concept IsValidSize =
-      S >= 4096 &&
-      S <= (1ULL << 32);
+  template <typename T>
+  concept IsValidStruct = std::is_trivially_copyable_v<T> && std::is_class_v<T>;
 
   template <Config C>
-  concept IsValidConfig =
-      IsValidSize<C.size> && std::string_view(C.name).contains(".db");
+  concept IsValidConfig = C.size >= 4096 && C.size <= (1ULL << 32) &&
+                          std::string_view(C.name).contains(".db");
 
+  template <typename T, Config C>
+    requires IsValidStruct<T> && IsValidConfig<C>
   class alignas(64) Table {
    public:
-    template <Config C>
-      requires IsValidConfig<C>
-    static Table Construct() {
-      return Table(C);
-    }
+    using table_t = T;
+
+    constexpr explicit Table() {}
 
     [[nodiscard]] constexpr std::string_view name() const noexcept {
       return config_.name;
@@ -31,11 +29,10 @@ namespace dart {
     Table& operator=(const Table&) = delete;
     Table& operator=(Table&&) = delete;
     Table(const Table&) = delete;
-    Table(Table&&) = delete;
+
+    Table(Table&& old) : config_{std::move(old.config_)} { old.config_ = {}; }
 
    private:
-    Config config_;
-
-    explicit Table(const Config& config) : config_{config} {}
+    Config config_{C};
   };
 }
