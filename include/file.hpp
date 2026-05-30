@@ -1,15 +1,15 @@
 #pragma once
 #include <expected>
 
-#include "config.hpp"
+#include "defs.hpp"
 #include "file_utils.hpp"
 
 namespace dart {
   using error_t = int32_t;
 
-  class alignas(32) File {
+  class alignas(64) File {
    public:
-    explicit File(Config& config) : config_{config} {
+    explicit File(TableData& table, Flags flags) : data_{table}, flags_{flags} {
       HandleResult(Open().and_then([&] { return MapMemory(); }));
     }
 
@@ -21,7 +21,8 @@ namespace dart {
     ~File() { CloseAndUnmapMemory(); }
 
    private:
-    Config& config_;
+    TableData& data_;
+    const Flags flags_;
     file_utils::Page page_mode_{file_utils::Page::kStandard};
     uint8_t* memory_map_{nullptr};
     int32_t file_descriptor_{-1};
