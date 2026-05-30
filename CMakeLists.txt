@@ -20,7 +20,8 @@ set(dart_header_files
         include/file_utils.hpp
         include/database.hpp
         include/table.hpp
-        include/config.hpp
+        include/defs.hpp
+        include/query_builder.hpp
 )
 
 set(dart_source_files
