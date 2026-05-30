@@ -28,13 +28,13 @@ namespace dart {
     Table(const Table&) = delete;
 
     Table(Table&& old)
-        : flags_{std::move(old.flags_)},
-          table_data_{std::move(old.table_data_)} {
+        : table_data_{std::move(old.table_data_)},
+          flags_{std::move(old.flags_)} {
       old.table_data_ = {}, old.flags_ = {};
     }
 
    private:
-    Flags flags_{F};
     TableData table_data_{D};
+    Flags flags_{F};
   };
 }
