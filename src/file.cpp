@@ -56,9 +56,10 @@ namespace dart {
       memory_map_ = static_cast<uint8_t*>(temp_mmap);
 
       if (page_mode_ == file_utils::Page::kHuge) {
-        if (madvise(memory_map_, data_.size, MADV_HUGEPAGE) == -1)
+        if (madvise(memory_map_, data_.size, MADV_HUGEPAGE) == -1) {
           memory_map_ = nullptr;
           return std::unexpected(errno);
+        }
       }
     }
     return {};
