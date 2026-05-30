@@ -11,7 +11,7 @@ namespace dart {
   concept IsValidData = D.size >= 4096 && D.size <= (1ULL << 32) &&
                         std::string_view(D.name).contains(".db");
 
-  template <typename T, TableData D, Flags F>
+  template <typename T, TableData D, Flags F = {}>
     requires IsValidStruct<T> && IsValidData<D>
   class alignas(64) Table {
    public:
