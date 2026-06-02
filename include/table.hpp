@@ -1,6 +1,9 @@
 #pragma once
+#include <type_traits>
+#include <string_view>
 
 #include "defs.hpp"
+#include "file.hpp"
 
 namespace dart {
   template <typename T>
@@ -19,6 +22,8 @@ namespace dart {
 
     constexpr explicit Table() {}
 
+    void Open() { file_.emplace(&table_data_, flags_); }
+
     [[nodiscard]] constexpr TableData& data() noexcept { return table_data_; }
 
     [[nodiscard]] constexpr Flags flags() const noexcept { return flags_; }
@@ -27,13 +32,14 @@ namespace dart {
     Table& operator=(Table&&) = delete;
     Table(const Table&) = delete;
 
-    Table(Table&& old)
-        : table_data_{std::move(old.table_data_)},
-          flags_{std::move(old.flags_)} {
+    Table(Table&& old) noexcept
+        : table_data_{old.table_data_},
+          flags_{old.flags_} {
       old.table_data_ = {}, old.flags_ = {};
     }
 
    private:
+    std::optional<File> file_;
     TableData table_data_{D};
     Flags flags_{F};
   };
