@@ -8,8 +8,6 @@
 
 namespace dart {
   std::expected<void, error_t> File::Open() noexcept {
-    data_.size = file_utils::Align(data_.size).first;
-
     int flags = flags_.read_only ? O_RDONLY : (O_RDWR | O_CREAT);
     int permissions = S_IRUSR;
 
@@ -57,6 +55,7 @@ namespace dart {
 
       if (page_mode_ == file_utils::Page::kHuge) {
         if (madvise(memory_map_, data_.size, MADV_HUGEPAGE) == -1) {
+          munmap(memory_map_, data_.size);
           memory_map_ = nullptr;
           return std::unexpected(errno);
         }
