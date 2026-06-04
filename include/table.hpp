@@ -1,26 +1,19 @@
 #pragma once
-#include <type_traits>
-#include <string_view>
+#include <optional>
+#include <cassert>
 
 #include "defs.hpp"
 #include "file.hpp"
+#include "constraints.hpp"
 
 namespace dart {
-  template <typename T>
-  concept IsValidStruct = std::is_trivially_copyable_v<T> &&
-                          std::is_class_v<T> && !std::is_pointer_v<T>;
-
-  template <TableData D>
-  concept IsValidData = D.size >= 4096 && D.size <= (1ULL << 32) &&
-                        std::string_view(D.name).contains(".db");
-
   template <typename T, TableData D, Flags F = {}>
     requires IsValidStruct<T> && IsValidData<D>
   class alignas(64) Table {
    public:
     using table_t = T;
 
-    constexpr explicit Table() {}
+    constexpr explicit Table() = default;
 
     void Open() { file_.emplace(&table_data_, flags_); }
 
@@ -35,6 +28,7 @@ namespace dart {
     Table(Table&& old) noexcept
         : table_data_{old.table_data_},
           flags_{old.flags_} {
+      assert(!old.file_.has_value());
       old.table_data_ = {}, old.flags_ = {};
     }
 
