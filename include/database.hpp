@@ -1,30 +1,23 @@
 #pragma once
 #include <tuple>
 
-#include "table.hpp"
+#include "file.hpp"
+#include "constraints.hpp"
 
 namespace dart {
-  template <typename T>
-  concept IsTable = requires(T t) {
-    typename T::table_t;
-    { t.data() } -> std::same_as<TableData&>;
-    { t.flags() } -> std::same_as<Flags>;
-  };
-
-  template <typename... T>
-  concept IsValidTableCount = sizeof...(T) >= 1 &&
-    sizeof...(T) <= std::numeric_limits<uint8_t>::max();
-
   template <typename... T>
     requires IsValidTableCount<T...> && (IsTable<T> && ...)
   class Database {
    public:
-    constexpr explicit Database(T&&... tables)
-        : tables_{std::move(tables)...} {}
+    constexpr explicit Database(T&&... tables) : tables_{std::move(tables)...} {}
 
-    template <uint64_t Tt>
+    void Build() {
+      std::apply([](auto&... table) { (table.Open(), ...); }, tables_);
+    }
+
+    template <uint64_t I>
     [[nodiscard]] constexpr auto& table() noexcept {
-      return std::get<Tt>(tables_);
+      return std::get<I>(tables_);
     }
 
     Database& operator=(const Database&) = delete;
