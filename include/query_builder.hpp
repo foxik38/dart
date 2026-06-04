@@ -1,5 +1,8 @@
 #pragma once
 
-namespace dart {
-  class QueryBuilder {};
-}
+namespace dart
+{
+  class query_builer
+  {
+  };
+} // namespace dart

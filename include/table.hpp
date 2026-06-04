@@ -1,40 +1,42 @@
 #pragma once
-#include <optional>
 #include <cassert>
+#include <optional>
 
+#include "constraints.hpp"
 #include "defs.hpp"
 #include "file.hpp"
-#include "constraints.hpp"
 
-namespace dart {
-  template <typename T, TableData D, Flags F = {}>
-    requires IsValidStruct<T> && IsValidData<D>
-  class alignas(64) Table {
-   public:
-    using table_t = T;
+namespace dart
+{
+  template <typename T, table_data D, table_flags F = {}>
+    requires valid_struct<T> && valid_table_data<D>
+  class alignas(64) table
+  {
+  public:
+    using table_type = T;
 
-    constexpr explicit Table() = default;
+    constexpr explicit table() = default;
 
-    void Open() { file_.emplace(table_data_, flags_); }
+    void open() { file_.emplace(data_, flags_); }
 
-    [[nodiscard]] constexpr TableData& data() noexcept { return table_data_; }
+    [[nodiscard]] constexpr table_data& data() noexcept { return data_; }
 
-    [[nodiscard]] constexpr Flags flags() const noexcept { return flags_; }
+    [[nodiscard]] constexpr table_flags flags() const noexcept { return flags_; }
 
-    Table& operator=(const Table&) = delete;
-    Table& operator=(Table&&) = delete;
-    Table(const Table&) = delete;
+    table& operator=(const table&) = delete;
+    table& operator=(table&&) = delete;
+    table(const table&) = delete;
 
-    Table(Table&& old) noexcept
-        : table_data_{old.table_data_},
-          flags_{old.flags_} {
+    table(table&& old) noexcept
+        : data_{old.data_}, flags_{old.flags_}
+    {
       assert(!old.file_.has_value());
-      old.table_data_ = {}, old.flags_ = {};
+      old.data_ = {}, old.flags_ = {};
     }
 
-   private:
-    std::optional<File> file_;
-    TableData table_data_{D};
-    Flags flags_{F};
+  private:
+    std::optional<file> file_;
+    table_data data_{D};
+    table_flags flags_{F};
   };
-}
+} // namespace dart

@@ -3,17 +3,17 @@
 #include "table.hpp"
 
 TEST(Table, CheckTableStructType) {
-  struct EmptyTable {};
-  constexpr dart::TableData data {"empty_table.db", 4096};
-  bool check_struct = std::is_same_v<dart::Table<EmptyTable, data>::table_t, EmptyTable>;
+  struct empty_table {};
+  constexpr dart::table_data data {"empty_table.db", 4096};
+  bool check_struct = std::is_same_v<dart::table<empty_table, data>::table_type, empty_table>;
 
   EXPECT_TRUE(check_struct);
 }
 
 TEST(Table, MoveTableAndCheckTableData) {
-  struct Users {};
-  constexpr dart::TableData data {"test.db", 4096};
-  dart::Table<Users, data> table;
+  struct users {};
+  constexpr dart::table_data data {"test.db", 4096};
+  dart::table<users, data> table;
   auto moved_table{std::move(table)};
 
   EXPECT_NE(&table, &moved_table);

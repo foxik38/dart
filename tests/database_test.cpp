@@ -4,26 +4,27 @@
 #include "table.hpp"
 
 TEST(Database, BuildDatabaseAndCheckSize) {
-  struct Users {
+  struct users {
     char pwd[128];
     char user[32];
     uint64_t id;
   };
 
-  struct Products {
+  struct products {
     char id[16];
     char title[32];
     uint64_t price;
   };
 
-  constexpr dart::TableData users_data {"users.db", 5000}, products_data {"products.db", 10000};
+  constexpr dart::table_data users_data {"users.db", 5000};
+  constexpr dart::table_data products_data {"products.db", 10000};
 
-  auto db = dart::Database(
-    dart::Table<Users, users_data>(),
-    dart::Table<Products, products_data>()
+  auto db = dart::database(
+    dart::table<users, users_data>(),
+    dart::table<products, products_data>()
   );
 
-  db.Build();
+  db.build();
 
   EXPECT_EQ(sizeof(db), 192 * 2);
 }

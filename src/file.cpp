@@ -1,20 +1,26 @@
 #include "file.hpp"
 
+#include <cerrno>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cerrno>
 
-namespace dart {
-  std::expected<void, error_t> File::Open() noexcept {
+namespace dart
+{
+  std::expected<void, error_t> file::open() noexcept
+  {
     int flags = flags_.read_only ? O_RDONLY : (O_RDWR | O_CREAT);
     int permissions = S_IRUSR;
 
-    if (!flags_.read_only) permissions |= S_IWUSR;
+    if (!flags_.read_only) {
+      permissions |= S_IWUSR;
+    }
 
-    int32_t temp_fd = open(data_.name, flags, permissions);
-    if (temp_fd == -1) return std::unexpected(errno);
+    int32_t temp_fd = ::open(data_.name, flags, permissions);
+    if (temp_fd == -1) {
+      return std::unexpected(errno);
+    }
 
     if (struct stat stat_struct{}; fstat(temp_fd, &stat_struct) != -1) {
       if (stat_struct.st_size == 0 && !flags_.read_only) {
@@ -28,7 +34,7 @@ namespace dart {
         }
       }
 
-      const auto [new_size, page_mode] = file_utils::Align(stat_struct.st_size);
+      const auto [new_size, page_mode] = file_utils::align(stat_struct.st_size);
 
       data_.size = new_size;
       page_mode_ = page_mode;
@@ -36,24 +42,29 @@ namespace dart {
 
       return {};
     }
-    close(temp_fd);
+    ::close(temp_fd);
     return std::unexpected(errno);
   }
 
-  std::expected<void, error_t> File::MapMemory() noexcept {
-    if (!memory_map_) {
+  std::expected<void, error_t> file::map() noexcept
+  {
+    if (memory_map_ == nullptr) {
       int mem_protection = PROT_READ;
 
-      if (!flags_.read_only) mem_protection |= PROT_WRITE;
+      if (!flags_.read_only) {
+        mem_protection |= PROT_WRITE;
+      }
 
       void* temp_mmap = mmap(nullptr, data_.size, mem_protection, MAP_SHARED,
                              file_descriptor_, 0);
 
-      if (temp_mmap == MAP_FAILED) return std::unexpected<error_t>(errno);
+      if (temp_mmap == MAP_FAILED) {
+        return std::unexpected<error_t>(errno);
+      }
 
       memory_map_ = static_cast<uint8_t*>(temp_mmap);
 
-      if (page_mode_ == file_utils::Page::kHuge) {
+      if (page_mode_ == file_utils::page::huge) {
         if (madvise(memory_map_, data_.size, MADV_HUGEPAGE) == -1) {
           munmap(memory_map_, data_.size);
           memory_map_ = nullptr;
@@ -64,8 +75,9 @@ namespace dart {
     return {};
   }
 
-  void File::CloseAndUnmapMemory() noexcept {
-    if (memory_map_) {
+  void file::close_and_unmap() noexcept
+  {
+    if (memory_map_ != nullptr) {
       msync(memory_map_, data_.size, MS_SYNC);
       munmap(memory_map_, data_.size);
       memory_map_ = nullptr;
@@ -76,4 +88,4 @@ namespace dart {
       file_descriptor_ = -1;
     }
   }
-}
+} // namespace dart
