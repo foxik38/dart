@@ -27,4 +27,7 @@ TEST(Database, BuildDatabaseAndCheckSize) {
   db.build();
 
   EXPECT_EQ(sizeof(db), 192 * 2);
+
+  unlink(users_data.name);
+  unlink(products_data.name);
 }
