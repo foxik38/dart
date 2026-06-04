@@ -10,6 +10,7 @@ namespace dart {
   class alignas(64) File {
    public:
     explicit File(TableData& table, Flags flags) : data_{table}, flags_{flags} {
+      data_.size = file_utils::Align(data_.size).first;
       HandleResult(Open().and_then([&] { return MapMemory(); }));
     }
 
