@@ -1,3 +1,4 @@
-BasedOnStyle: Google
+BasedOnStyle: LLVM
 PointerAlignment: Left
 NamespaceIndentation: All
+BreakBeforeBraces: Linux
