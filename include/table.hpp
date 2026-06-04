@@ -15,7 +15,7 @@ namespace dart {
 
     constexpr explicit Table() = default;
 
-    void Open() { file_.emplace(&table_data_, flags_); }
+    void Open() { file_.emplace(table_data_, flags_); }
 
     [[nodiscard]] constexpr TableData& data() noexcept { return table_data_; }
 
