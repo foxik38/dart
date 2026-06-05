@@ -1,24 +1,26 @@
-#include <iostream>
-
 #include "database.hpp"
-#include "file.hpp"
+#include "defs.hpp"
 #include "table.hpp"
 
-int main() {
-  constexpr dart::Config cfg {"orders.db", 4096 * 2};
-
-  struct Users {
+int main()
+{
+  struct users {
     char pwd[128];
     char user[32];
     uint64_t id;
   };
 
-  auto users = dart::Table<Users, {"users.db", 4096}>();
+  struct products {
+    char id[16];
+    char title[32];
+    uint64_t price;
+  };
 
-  std::cout << "users: " << users.size() << '\n'; // 4096 (size)
+  constexpr dart::table_data users_data{"users.db", 5000};
+  constexpr dart::table_data products_data{"products.db", 10000};
 
-  auto users_new = std::move(users);
+  auto db = dart::database(dart::table<users, users_data>(),
+                           dart::table<products, products_data>());
 
-  std::cout << "users: " << users.size() << '\n'; // 0 (MOVED)
-  std::cout << "users_new: " << users_new.size() << '\n'; // 4096 (MOVED)
+  db.build();
 }

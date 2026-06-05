@@ -1,0 +1,17 @@
+Checks: '-*,modernize-*,readability-*,misc-include-cleaner'
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+CheckOptions:
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+
+  readability-identifier-naming.ClassCase: lower_case
+  readability-identifier-naming.StructCase: lower_case
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ConceptCase: lower_case
+  readability-identifier-naming.EnumCase: lower_case
+  readability-identifier-naming.EnumConstantCase: lower_case
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.TypeAliasCase: lower_case
+
+  readability-identifier-naming.PrivateMemberSuffix: _

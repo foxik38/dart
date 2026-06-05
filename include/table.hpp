@@ -1,38 +1,42 @@
 #pragma once
+#include <cassert>
+#include <optional>
 
-#include "config.hpp"
+#include "constraints.hpp"
+#include "defs.hpp"
+#include "file.hpp"
 
-namespace dart {
-  template <typename T>
-  concept IsValidStruct = std::is_trivially_copyable_v<T> && std::is_class_v<T>;
+namespace dart
+{
+  template <typename T, table_data D, table_flags F = {}>
+    requires valid_struct<T> && valid_table_data<D>
+  class alignas(64) table
+  {
+  public:
+    using table_type = T;
 
-  template <Config C>
-  concept IsValidConfig = C.size >= 4096 && C.size <= (1ULL << 32) &&
-                          std::string_view(C.name).contains(".db");
+    constexpr explicit table() = default;
 
-  template <typename T, Config C>
-    requires IsValidStruct<T> && IsValidConfig<C>
-  class alignas(64) Table {
-   public:
-    using table_t = T;
+    void open() { file_.emplace(data_, flags_); }
 
-    constexpr explicit Table() {}
+    [[nodiscard]] constexpr table_data& data() noexcept { return data_; }
 
-    [[nodiscard]] constexpr std::string_view name() const noexcept {
-      return config_.name;
+    [[nodiscard]] constexpr table_flags flags() const noexcept { return flags_; }
+
+    table& operator=(const table&) = delete;
+    table& operator=(table&&) = delete;
+    table(const table&) = delete;
+
+    table(table&& old) noexcept
+        : data_{old.data_}, flags_{old.flags_}
+    {
+      assert(!old.file_.has_value());
+      old.data_ = {}, old.flags_ = {};
     }
 
-    [[nodiscard]] constexpr uint64_t size() const noexcept {
-      return config_.size;
-    }
-
-    Table& operator=(const Table&) = delete;
-    Table& operator=(Table&&) = delete;
-    Table(const Table&) = delete;
-
-    Table(Table&& old) : config_{std::move(old.config_)} { old.config_ = {}; }
-
-   private:
-    Config config_{C};
+  private:
+    std::optional<file> file_;
+    table_data data_{D};
+    table_flags flags_{F};
   };
-}
+} // namespace dart

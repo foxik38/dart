@@ -20,7 +20,9 @@ set(dart_header_files
         include/file_utils.hpp
         include/database.hpp
         include/table.hpp
-        include/config.hpp
+        include/defs.hpp
+        include/query_builder.hpp
+        include/constraints.hpp
 )
 
 set(dart_source_files
@@ -36,6 +38,7 @@ target_link_libraries(dart_executable PRIVATE dart_target)
 add_executable(dart_unit_tests
         tests/table_test.cpp
         tests/file_utils_test.cpp
+        tests/database_test.cpp
 )
 
 target_link_libraries(dart_unit_tests PRIVATE dart_target gtest_main)
